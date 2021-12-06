@@ -1,29 +1,31 @@
-global aoc_day02_1
+global aoc_day02_2
 
 extern printcstr, printlb, printd, file_read_uint32
 
 section .data
-        filename  db      'input1.txt', 0
-        part1     db      'Part 1:', 0
+        filename  db      'input2.txt', 0
+        part1     db      'Part 2:', 0
         file_des  db      '    File descriptor: ', 0
         lines     db      '    Lines read:      ', 0
+        aim       db      '    Aim:             ', 0
         horiz     db      '    Horizontal:      ', 0
         verti     db      '    Depth:           ', 0
         multi     db      '    Product:         ', 0
 
 section .text
-aoc_day02_1:
+aoc_day02_2:
         push    ebp
         mov     ebp, esp
-        sub     esp, 28
+        sub     esp, 32
         
         ;; 4  -> File descriptor
         ;; 8  -> Horizontal pos
         ;; 12 -> Vertical pos
         ;; 16 -> Last read character
-        ;; 20 -> Value
+        ;; 20 -> Just read value
         ;; 24 -> Count index (i)
-        ;; 28 -> argument
+        ;; 28 -> Aim
+        ;; 32 -> argument
 
         ;; Print part1
         mov     dword [esp], part1
@@ -46,9 +48,10 @@ aoc_day02_1:
         ; call    printd
         ; call    printlb
 
-        ;; Set x & y
+        ;; Set x, y & aim
         mov     dword [ebp-8 ], 0
         mov     dword [ebp-12], 0
+        mov     dword [ebp-28], 0
         ;; Set i
         mov     dword [ebp-24], 0
 begin_read_file:
@@ -80,17 +83,22 @@ begin_read_file:
         cmp     byte [ebp-16], 'u'
         jne     check_down
         mov     eax, [ebp-20]
-        sub     [ebp-12], eax
+        sub     [ebp-28], eax
         jmp     end_check_dir
 check_down:
         cmp     byte[ebp-16], 'd'
         jne     check_forward
         mov     eax, [ebp-20]
-        add     [ebp-12], eax
+        add     [ebp-28], eax
         jmp     end_check_dir
 check_forward:
         mov     eax, [ebp-20]
         add     [ebp-8], eax
+        mov     eax, [ebp-28]
+        imul    eax, [ebp-20]
+        mov     ebx, [ebp-12]
+        add     ebx, eax
+        mov     [ebp-12], ebx
 end_check_dir:
 
         ;; Add 1 to i
@@ -104,6 +112,14 @@ end_read_file:
         mov     dword [esp], lines
         call    printcstr
         mov     eax, [ebp-24]
+        mov     [esp], eax
+        call    printd
+        call    printlb
+
+        ;; Print aim
+        mov     dword [esp], aim
+        call    printcstr
+        mov     eax, [ebp-28]
         mov     [esp], eax
         call    printd
         call    printlb
