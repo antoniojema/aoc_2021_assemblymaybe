@@ -5,7 +5,7 @@ extern printcstr, printlb, printd, file_read_uint32, printchar
 section .data
         filename  db      'input2.txt', 0
         string1   db      'File descriptor: ', 0
-        string2   db      'Number of increments: ', 0
+        string2   db      'Part 2: ', 0
 
 section .text
 aoc_day01_2:
@@ -21,13 +21,13 @@ aoc_day01_2:
         int     0x80
         mov     [ebp-4], eax
 
-        ;; Print file descriptor
-        mov     dword [esp], string1
-        call    printcstr
-        mov     eax, [ebp-4]
-        mov     [esp], eax
-        call    printd
-        call    printlb
+        ; ;; Print file descriptor
+        ; mov     dword [esp], string1
+        ; call    printcstr
+        ; mov     eax, [ebp-4]
+        ; mov     [esp], eax
+        ; call    printd
+        ; call    printlb
 
         mov     dword [ebp-8], 0
         mov     dword [ebp-12], 0
