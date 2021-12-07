@@ -1,6 +1,6 @@
-global file_create, file_close, file_open, file_read_uint32
+global file_create, file_close, file_open, file_read_uint32, file_read_line
 
-extern cstr_to_uint32, printd, printlb
+extern cstr_to_uint32, printd, printlb, printchar
 
 section .text
 ;;------------------;;
@@ -163,6 +163,65 @@ end_read_uint32:
         lea     eax, [ebp-136]
         sub     eax, [ebp-140]
         
+        ;; Return
+        mov     esp, ebp
+        pop     ebp
+        ret
+
+;;---------------------;;
+;;   file_read_line    ;;
+;;---------------------;;
+;; - Takes:
+;;      - File descriptor
+;;      - Pointer to buffer
+;; - Returns:
+;;      - eax: Number of bytes read
+file_read_line:
+        push    ebp
+        mov     ebp, esp
+        sub     esp, 4
+
+        ;; -8  -> File descriptor
+        ;; -12 -> Pointer to buffer
+        ;;  4  -> Pointer to current buffer byte
+
+        ;; Set pointer to buffer begin
+        mov     eax, [ebp+12]
+        mov     [ebp-4], eax
+
+begin_read_line:
+        ;; Read char
+        mov     eax, 3
+        mov     ebx, [ebp+8]
+        mov     ecx, [ebp-4]
+        mov     edx, 1
+        int     0x80
+
+        ;; If nothing was read, exit loop
+        cmp     eax, 1
+        jne     end_read_line
+
+        ;; Else, increase pointer
+        mov     eax, [ebp-4]
+        mov     ebx, eax
+        add     eax, 1
+        mov     [ebp-4], eax
+
+        ;; If character was endline (0xA), exit loop
+        cmp     byte [ebx], 0xA
+        je      end_read_line
+
+        ;; Else, back to begin
+        jmp     begin_read_line
+
+end_read_line:
+        ;; Set null char
+        mov     eax, [ebp-4]
+        mov     byte [eax], 0
+
+        ;; Set number of bytes in eax
+        sub     eax, [ebp+12]
+
         ;; Return
         mov     esp, ebp
         pop     ebp
