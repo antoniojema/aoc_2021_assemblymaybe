@@ -1,4 +1,6 @@
-global cstr_to_uint32, cstr_seek_end, invert_cstr, cstr_len
+global cstr_to_uint32, cstr_seek_end, invert_cstr, cstr_len, cstr_read_bits
+
+; extern printd, printlb
 
 section .text
 
@@ -51,6 +53,58 @@ sum_loop_begin:
         jmp     sum_loop_begin
 
 sum_loop_end:
+        pop     ebp
+        ret
+
+;;---------------------;;
+;;   cstr_read_bits    ;;
+;;---------------------;;
+;; - Takes a pointer to a cstr through the stack that contains 0s and 1s
+;; - Returns cstr converted to uint32 in the same stack position
+cstr_read_bits:
+        push    ebp
+        mov     ebp, esp
+
+        ;; eax -> pointer to the begin of the cstr
+        ;; cl  -> shift mask
+
+        ;; Count number of elements
+        mov     eax, [ebp+8]
+        mov     cl, 0
+begin_count:
+        mov     bl, byte [eax]
+        cmp     bl, '0'
+        jl      end_count
+        cmp     bl, '1'
+        jg      end_count
+
+        add     eax, 1
+        add     cl, 1
+        jmp     begin_count
+end_count:
+        sub     cl, 1
+        
+        ;; Point to first element
+        mov     eax, [ebp+8]
+        mov     dword [ebp+8], 0
+
+begin_read_number:
+        mov     bl, byte [eax]
+        cmp     bl, '0'
+        jl      end_read_number
+        cmp     bl, '1'
+        jg      end_read_number
+        
+        sub     bl, '0'  ;; contains number 0 or 1
+        movzx   ebx, bl
+        shl     ebx, cl
+        or      [ebp+8], ebx
+
+        add     eax, 1
+        sub     cl, 1
+        jmp begin_read_number
+end_read_number:
+
         pop     ebp
         ret
 
