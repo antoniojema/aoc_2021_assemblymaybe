@@ -3,20 +3,20 @@ global aoc_day03_1
 extern printcstr, printlb, printd, file_read_line
 
 section .data
-        filename  db      'sample1.txt', 0
+        filename  db      'input1.txt', 0
         part1     db      'Part 1:', 0
         file_des  db      '    File descriptor: ', 0
         lines     db      '    Lines read:      ', 0
         epsil     db      '    epsilon:         ', 0
         gamma     db      '    gamma:           ', 0
         multi     db      '    Product:         ', 0
-        no_bits   dd      5
+        no_bits   dd      12
 
 section .text
 aoc_day03_1:
         push    ebp
         mov     ebp, esp
-        sub     esp, 208
+        sub     esp, 212
         
         ;; 4   -> File descriptor
         ;; 132 -> Char buffer begin (len=128)
@@ -26,6 +26,7 @@ aoc_day03_1:
         ;; 192 -> Pointer to char buffer current position
         ;; 196 -> Epsilon
         ;; 200 -> Gamma
+        ;; 204 -> Product
         ;;  +4 -> argument 2
         ;;  +8 -> argument 1
 
@@ -42,13 +43,13 @@ aoc_day03_1:
         int     0x80
         mov     [ebp-4], eax
 
-        ;; Print file descriptor
-        mov     dword [esp], file_des
-        call    printcstr
-        mov     eax, [ebp-4]
-        mov     [esp], eax
-        call    printd
-        call    printlb
+        ; ;; Print file descriptor
+        ; mov     dword [esp], file_des
+        ; call    printcstr
+        ; mov     eax, [ebp-4]
+        ; mov     [esp], eax
+        ; call    printd
+        ; call    printlb
 
         ;; Set int buffet to zero
         lea     eax, [ebp-180]
@@ -72,10 +73,10 @@ begin_get_lines:
         cmp     eax, 0
         je      end_get_lines
 
-        ;; Print line
-        lea     eax, [ebp-132]
-        mov     [esp], eax
-        call    printcstr
+        ; ;; Print line
+        ; lea     eax, [ebp-132]
+        ; mov     [esp], eax
+        ; call    printcstr
 
         ;; Set pointers and counter of int buffer
         lea     eax, [ebp-180]
@@ -138,46 +139,31 @@ end_append:
         jmp     begin_get_lines
 
 end_get_lines:
-        call    printlb
+        ; call    printlb
 
         ;; Read int buffer
+        mov     dword [ebp-196], 0 ;; epsilon
+        mov     dword [ebp-200], 0 ;; gamma
         lea     eax, [ebp-180]
-        mov     ebx, 0
+        mov     cl, [no_bits]
 begin_read_int:
+        sub     cl, 1
         cmp     dword [eax], 0
         jl      more_0
 more_1:
-
-        ; mov     [ebp-184], eax  ;;
-        ; mov     [ebp-188], ebx  ;;
-        ; mov     eax, [eax]      ;; DEBUG
-        ; mov     dword [esp], 1  ;; DEBUG
-        ; call    printd          ;;
-        ; call    printlb         ;;
-        ; mov     eax, [ebp-184]  ;;
-        ; mov     ebx, [ebp-188]  ;;
-
+        mov     ebx, 1
+        shl     ebx, cl
+        or      [ebp-196], ebx
         jmp     end_comp
 more_0:
-
-        mov     ecx, 1
-
-        ; mov     [ebp-184], eax  ;;
-        ; mov     [ebp-188], ebx  ;;
-        ; mov     eax, [eax]      ;; DEBUG
-        ; mov     dword [esp], 0  ;; DEBUG
-        ; call    printd          ;;
-        ; call    printlb         ;;
-        ; mov     eax, [ebp-184]  ;;
-        ; mov     ebx, [ebp-188]  ;;
-
+        mov     ebx, 1
+        shl     ebx, cl
+        or      [ebp-200], ebx
         jmp     end_comp
 end_comp:
-
         add     eax, 4
-        add     ebx, 1
-        cmp     ebx, [no_bits]
-        jge     end_read_int
+        cmp     cl, 0
+        jle     end_read_int
         jmp     begin_read_int
 end_read_int:
 
@@ -185,6 +171,35 @@ end_read_int:
         mov     eax, 6
         mov     ebx, [ebp-4]
         int     0x80
+
+        ;; Calculate product
+        mov     eax, [ebp-196]
+        imul    eax, [ebp-200]
+        mov     [ebp-204], eax
+
+        ;; Print epsilon
+        mov     dword [esp], epsil
+        call    printcstr
+        mov     eax, [ebp-196]
+        mov     [esp], eax
+        call    printd
+        call    printlb
+
+        ;; Print gamma
+        mov     dword [esp], gamma
+        call    printcstr
+        mov     eax, [ebp-200]
+        mov     [esp], eax
+        call    printd
+        call    printlb
+
+        ;; Print product
+        mov     dword [esp], multi
+        call    printcstr
+        mov     eax, [ebp-204]
+        mov     [esp], eax
+        call    printd
+        call    printlb
 
         mov     esp, ebp
         pop     ebp
